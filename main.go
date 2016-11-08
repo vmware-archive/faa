@@ -8,6 +8,9 @@ import (
 
 	"strconv"
 
+	"fmt"
+	"strings"
+
 	"github.com/chendrix/faa/postfacto"
 	"github.com/chendrix/faa/slackcommand"
 )
@@ -57,10 +60,17 @@ type PostfactoSlackDelegate struct {
 	RetroClient *postfacto.RetroClient
 }
 
-func (d *PostfactoSlackDelegate) Handle(r slackcommand.Request) (string, error) {
-	var category postfacto.Category
+func (d *PostfactoSlackDelegate) Handle(r slackcommand.Command) (string, error) {
+	parts := strings.SplitN(r.Text, " ", 2)
+	if len(parts) < 2 {
+		return "", fmt.Errorf("must be in the form of '%s [happy/meh/sad] [message]'", r.Command)
+	}
 
-	switch postfacto.Category(r.Command) {
+	c := parts[0]
+	description := parts[1]
+
+	var category postfacto.Category
+	switch postfacto.Category(c) {
 	case postfacto.CategoryHappy:
 		category = postfacto.CategoryHappy
 	case postfacto.CategoryMeh:
@@ -73,7 +83,7 @@ func (d *PostfactoSlackDelegate) Handle(r slackcommand.Request) (string, error) 
 
 	retroItem := postfacto.RetroItem{
 		Category:    category,
-		Description: r.Message,
+		Description: description,
 	}
 
 	err := d.RetroClient.Add(retroItem)

@@ -3,25 +3,30 @@ package slackcommand
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
+
+	"github.com/gorilla/schema"
 )
 
-type Request struct {
-	Command string
-	Message string
+type Command struct {
+	Token       string `schema:"token"`
+	TeamID      string `schema:"team_id"`
+	TeamDomain  string `schema:"team_domain"`
+	ChannelID   string `schema:"channel_id"`
+	ChannelName string `schema:"channel_name"`
+	UserID      string `schema:"user_id"`
+	UserName    string `schema:"user_name"`
+	Command     string `schema:"command"`
+	Text        string `schema:"text"`
+	ResponseURL string `schema:"response_url"`
 }
 
 type Delegate interface {
-	Handle(Request) (string, error)
+	Handle(Command) (string, error)
 }
 
 type Server struct {
 	VerificationToken string
 	Delegate          Delegate
-}
-
-type ErrResponse struct {
-	Message string `json:"error"`
 }
 
 type Response struct {
@@ -52,30 +57,20 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t := r.PostFormValue("token")
-	if t != s.VerificationToken {
+	var c Command
+
+	err = schema.NewDecoder().Decode(&c, r.PostForm)
+	if err != nil {
+		json.NewEncoder(w).Encode(NewErrResponse(err.Error()))
+		return
+	}
+
+	if c.Token != s.VerificationToken {
 		json.NewEncoder(w).Encode(NewErrResponse("token verification failed"))
 		return
 	}
 
-	text := r.PostFormValue("text")
-	if text == "" {
-		json.NewEncoder(w).Encode(NewErrResponse("missing text"))
-		return
-	}
-
-	parts := strings.SplitN(text, " ", 2)
-	if len(parts) < 2 {
-		json.NewEncoder(w).Encode(NewErrResponse("must provide command and text"))
-		return
-	}
-
-	slackRequest := Request{
-		Command: parts[0],
-		Message: parts[1],
-	}
-
-	msg, err := s.Delegate.Handle(slackRequest)
+	msg, err := s.Delegate.Handle(c)
 	if err != nil {
 		json.NewEncoder(w).Encode(NewErrResponse(err.Error()))
 		return
