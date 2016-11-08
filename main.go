@@ -83,7 +83,7 @@ func (d *PostfactoSlackDelegate) Handle(r slackcommand.Command) (string, error) 
 
 	retroItem := postfacto.RetroItem{
 		Category:    category,
-		Description: description,
+		Description: fmt.Sprintf("%s [%s]", description, r.UserName),
 	}
 
 	err := d.RetroClient.Add(retroItem)
