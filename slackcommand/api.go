@@ -12,7 +12,7 @@ type Request struct {
 }
 
 type Delegate interface {
-	Handle(Request) error
+	Handle(Request) (string, error)
 }
 
 type Server struct {
@@ -24,32 +24,49 @@ type ErrResponse struct {
 	Message string `json:"error"`
 }
 
+type Response struct {
+	Type string `json:"response_type"`
+	Text string `json:"text"`
+}
+
+func NewOKResponse(text string) Response {
+	return Response{
+		Type: "in_channel",
+		Text: text,
+	}
+}
+
+func NewErrResponse(text string) Response {
+	return Response{
+		Type: "ephemeral",
+		Text: text,
+	}
+}
+
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	err := r.ParseForm()
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrResponse{err.Error()})
+		json.NewEncoder(w).Encode(NewErrResponse(err.Error()))
 		return
 	}
 
 	t := r.PostFormValue("token")
 	if t != s.VerificationToken {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(ErrResponse{"token verification failed"})
+		json.NewEncoder(w).Encode(NewErrResponse("token verification failed"))
 		return
 	}
 
 	text := r.PostFormValue("text")
 	if text == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrResponse{"missing text"})
+		json.NewEncoder(w).Encode(NewErrResponse("missing text"))
 		return
 	}
 
 	parts := strings.SplitN(text, " ", 2)
 	if len(parts) < 2 {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrResponse{"must provide command and text"})
+		json.NewEncoder(w).Encode(NewErrResponse("must provide command and text"))
 		return
 	}
 
@@ -58,13 +75,11 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Message: parts[1],
 	}
 
-	err = s.Delegate.Handle(slackRequest)
+	msg, err := s.Delegate.Handle(slackRequest)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrResponse{err.Error()})
+		json.NewEncoder(w).Encode(NewErrResponse(err.Error()))
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(nil)
+	json.NewEncoder(w).Encode(NewOKResponse(msg))
 }

@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"strconv"
+
 	"github.com/chendrix/faa/postfacto"
 	"github.com/chendrix/faa/slackcommand"
-	"strconv"
 )
 
 func main() {
@@ -56,7 +57,7 @@ type PostfactoSlackDelegate struct {
 	RetroClient *postfacto.RetroClient
 }
 
-func (d *PostfactoSlackDelegate) Handle(r slackcommand.Request) error {
+func (d *PostfactoSlackDelegate) Handle(r slackcommand.Request) (string, error) {
 	var category postfacto.Category
 
 	switch postfacto.Category(r.Command) {
@@ -67,7 +68,7 @@ func (d *PostfactoSlackDelegate) Handle(r slackcommand.Request) error {
 	case postfacto.CategorySad:
 		category = postfacto.CategorySad
 	default:
-		return errors.New("unknown postfacto category: must provide one of 'happy', 'meh', or 'sad'")
+		return "", errors.New("unknown postfacto category: must provide one of 'happy', 'meh', or 'sad'")
 	}
 
 	retroItem := postfacto.RetroItem{
@@ -75,5 +76,10 @@ func (d *PostfactoSlackDelegate) Handle(r slackcommand.Request) error {
 		Description: r.Message,
 	}
 
-	return d.RetroClient.Add(retroItem)
+	err := d.RetroClient.Add(retroItem)
+	if err != nil {
+		return "", err
+	}
+
+	return "retro item added", nil
 }
