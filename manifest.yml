@@ -1,0 +1,11 @@
+applications:
+- name: faa
+  instances: 1
+  memory: 128M
+  buildpack: go_buildpack
+  routes:
+  - route: faa.cfapps.io
+  command: faa
+  env:
+    GOPACKAGENAME: github.com/chendrix/faa
+  stack: cflinuxfs2
