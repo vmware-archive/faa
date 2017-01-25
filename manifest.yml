@@ -7,5 +7,5 @@ applications:
   - route: faa.cfapps.io
   command: faa
   env:
-    GOPACKAGENAME: github.com/chendrix/faa
+    GOPACKAGENAME: github.com/concourse/faa
   stack: cflinuxfs2

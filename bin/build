@@ -6,4 +6,4 @@ echo -e "\nGenerating Binary..."
 
 ROOT_DIR=$(cd $(dirname $(dirname $0)) && pwd)
 
-go build -o "${ROOT_DIR}/out/faa" github.com/chendrix/faa
+go build -o "${ROOT_DIR}/out/faa" github.com/concourse/faa

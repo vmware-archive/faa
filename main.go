@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chendrix/faa/postfacto"
-	"github.com/chendrix/faa/slackcommand"
+	"github.com/concourse/faa/postfacto"
+	"github.com/concourse/faa/slackcommand"
 )
 
 func main() {
