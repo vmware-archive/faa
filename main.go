@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"strconv"
-
 	"fmt"
 	"strings"
 
@@ -30,22 +28,14 @@ func main() {
 		panic(errors.New("Must provide SLACK_VERIFICATION_TOKEN"))
 	}
 
-	retroIDS, ok := os.LookupEnv("POSTFACTO_RETRO_ID")
+	retroID, ok := os.LookupEnv("POSTFACTO_RETRO_ID")
 	if !ok {
 		panic(errors.New("Must provide POSTFACTO_RETRO_ID"))
 	}
-	retroID, err := strconv.Atoi(retroIDS)
-	if err != nil {
-		panic(errors.New("POSTFACTO_RETRO_ID must be an integer"))
-	}
 
-	techRetroIDS, ok := os.LookupEnv("POSTFACTO_TECH_RETRO_ID")
+	techRetroID, ok := os.LookupEnv("POSTFACTO_TECH_RETRO_ID")
 	if !ok {
 		panic(errors.New("Must provide POSTFACTO_TECH_RETRO_ID"))
-	}
-	techRetroID, err := strconv.Atoi(techRetroIDS)
-	if err != nil {
-		panic(errors.New("POSTFACTO_TECH_RETRO_ID must be an integer"))
 	}
 
 	c := &postfacto.RetroClient{
