@@ -28,6 +28,11 @@ func main() {
 		panic(errors.New("Must provide SLACK_VERIFICATION_TOKEN"))
 	}
 
+	postfactoAPI, ok := os.LookupEnv("POSTFACTO_API")
+	if !ok {
+		postfactoAPI = "https://retro-api.cfapps.io"
+	}
+
 	retroID, ok := os.LookupEnv("POSTFACTO_RETRO_ID")
 	if !ok {
 		panic(errors.New("Must provide POSTFACTO_RETRO_ID"))
@@ -39,12 +44,12 @@ func main() {
 	}
 
 	c := &postfacto.RetroClient{
-		Host: "https://retro-api.cfapps.io",
+		Host: postfactoAPI,
 		ID:   retroID,
 	}
 
 	t := &postfacto.RetroClient{
-		Host: "https://retro-api.cfapps.io",
+		Host: postfactoAPI,
 		ID:   techRetroID,
 	}
 
