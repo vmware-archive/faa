@@ -30,7 +30,7 @@ func main() {
 
 	postfactoAPI, ok := os.LookupEnv("POSTFACTO_API")
 	if !ok {
-		postfactoAPI = "https://retro-api.cfapps.io"
+		postfactoAPI = "https://felicity-api.cfapps.io"
 	}
 
 	retroID, ok := os.LookupEnv("POSTFACTO_RETRO_ID")
