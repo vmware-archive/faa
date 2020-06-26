@@ -38,10 +38,7 @@ func main() {
 		panic(errors.New("Must provide POSTFACTO_RETRO_ID"))
 	}
 
-	techRetroID, ok := os.LookupEnv("POSTFACTO_TECH_RETRO_ID")
-	if !ok {
-		panic(errors.New("Must provide POSTFACTO_TECH_RETRO_ID"))
-	}
+	techRetroID, _ := os.LookupEnv("POSTFACTO_TECH_RETRO_ID")
 
 	retroPassword, _ := os.LookupEnv("POSTFACTO_RETRO_PASSWORD")
 
@@ -51,9 +48,12 @@ func main() {
 		Password: retroPassword,
 	}
 
-	t := &postfacto.RetroClient{
-		Host: postfactoAPI,
-		ID:   techRetroID,
+	var t *postfacto.RetroClient
+	if techRetroID != "" {
+		t = &postfacto.RetroClient{
+			Host: postfactoAPI,
+			ID:   techRetroID,
+		}
 	}
 
 	server := slackcommand.Server{
@@ -86,7 +86,7 @@ const (
 func (d *PostfactoSlackDelegate) Handle(r slackcommand.Command) (string, error) {
 	parts := strings.SplitN(r.Text, " ", 2)
 	if len(parts) < 2 {
-		return "", fmt.Errorf("must be in the form of '%s [happy/meh/sad/tech] [message]'", r.Command)
+		return "", fmt.Errorf("must be in the form of '%s [%s] [message]'", r.Command, d.availableCommands())
 	}
 
 	c := parts[0]
@@ -110,8 +110,11 @@ func (d *PostfactoSlackDelegate) Handle(r slackcommand.Command) (string, error) 
 	case CommandTech:
 		category = postfacto.CategoryHappy
 		client = d.TechRetroClient
+		if client == nil {
+			return "", fmt.Errorf("unknown command: must provide one of %s", d.availableCommands())
+		}
 	default:
-		return "", errors.New("unknown command: must provide one of 'happy', 'meh', 'sad', or 'tech'")
+		return "", fmt.Errorf("unknown command: must provide one of %s", d.availableCommands())
 	}
 
 	retroItem := postfacto.RetroItem{
@@ -132,4 +135,12 @@ func (d *PostfactoSlackDelegate) Handle(r slackcommand.Command) (string, error) 
 	}
 
 	return "retro item added", nil
+}
+
+func (d *PostfactoSlackDelegate) availableCommands() string {
+	if d.TechRetroClient == nil {
+		return "happy/meh/sad"
+	} else {
+		return "happy/meh/sad/tech"
+	}
 }
