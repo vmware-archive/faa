@@ -43,9 +43,12 @@ func main() {
 		panic(errors.New("Must provide POSTFACTO_TECH_RETRO_ID"))
 	}
 
+	retroPassword, _ := os.LookupEnv("POSTFACTO_RETRO_PASSWORD")
+
 	c := &postfacto.RetroClient{
-		Host: postfactoAPI,
-		ID:   retroID,
+		Host:     postfactoAPI,
+		ID:       retroID,
+		Password: retroPassword,
 	}
 
 	t := &postfacto.RetroClient{
@@ -114,6 +117,13 @@ func (d *PostfactoSlackDelegate) Handle(r slackcommand.Command) (string, error) 
 	retroItem := postfacto.RetroItem{
 		Category:    category,
 		Description: fmt.Sprintf("%s [%s]", description, r.UserName),
+	}
+
+	if client.Password != "" {
+		err := client.Login()
+		if err != nil {
+			return "", err
+		}
 	}
 
 	err := client.Add(retroItem)
